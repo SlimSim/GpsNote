@@ -43,7 +43,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      * generaly 2 different methods for interacting with the DB,
      * Method 1 is probably the SQL-injection-safe method
      * Method 2 allows for litle more controle :)
-     * @param contact
+     * @param contact the model to be inserted :)
      */
 
     public void insertRecord(ContactModel contact) { //method 1
@@ -101,7 +101,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         database = this.getReadableDatabase();
         Cursor cursor = database.query(TABLE_NAME, null, null, null, null, null, null);
 
-        ArrayList<ContactModel> contacts = new ArrayList<ContactModel>();
+        ArrayList<ContactModel> contacts = new ArrayList<>();
         ContactModel contactModel;
         if (cursor.getCount() > 0) {
             for (int i = 0; i < cursor.getCount(); i++) {

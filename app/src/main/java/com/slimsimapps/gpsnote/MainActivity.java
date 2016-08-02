@@ -15,7 +15,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -43,7 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private String currentNote;
     private Context m_context;
 
+
     SQLiteHelper sQLiteHelper = new SQLiteHelper(MainActivity.this);
+
+    // private ArrayList<ContactModel> aContactModel;
 
     /*
         double longitudeBest, latitudeBest;
@@ -62,11 +67,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
+//        ArrayList<ContactModel> aContactModel = sQLiteHelper.getAllRecords();
         readRecord();
 
 //        longitudeValue = (TextView) findViewById(R.id.getLocationLongitudeResult); // my
 //        latitudeValue = (TextView) findViewById(R.id.getLocationLatitudeResult); // my
-
     }
 
     private boolean checkLocation() {
@@ -155,18 +160,20 @@ public class MainActivity extends AppCompatActivity {
         Log.v(TAG, "getLocationAndSaveNote ->");
         if(!checkLocation())
             return;
-        ((LinearLayout) findViewById(R.id.parentLayout)).addView( getNoteView(currentNote, 0), 0 );
+
+        ((TextView) findViewById(R.id.noteLoadingNote)).setText( currentNote );
+        Log.v(TAG, "getLocationAndSaveNote ->");
+        findViewById(R.id.noteLoading).setVisibility( View.VISIBLE );
+        Log.v(TAG, "getLocationAndSaveNote ->");
 
         getLocation( locationListenerToSaveNote );
-        Log.v(TAG, "getLocationAndSaveNote <-");
     }
 
-    private View getNoteView(String text, double distance) {
+    private View getNoteView(String text, double distance, int id) {
         View child = getLayoutInflater().inflate(R.layout.note, null);
         ((TextView) child.findViewById(R.id.noteNote)).setText( text );
+        ((TextView) child.findViewById(R.id.noteId)).setText( "" + id );
         String strDistance;
-//        if( distance > 1000000 )
-//            strDistance = Math.round(distance/1000000) + "Mm";
         if( distance > 1000 )
             strDistance = Math.round(distance/1000) + "km";
         else
@@ -176,32 +183,32 @@ public class MainActivity extends AppCompatActivity {
         return child;
     }
 
-    // /*
+    /*
+    private View getLoadingNoteView(String text) {
+
+        View child = getLayoutInflater().inflate(R.layout.note, null);
+    }
+    */
+
     private final LocationListener locationListenerToSaveNote = new LocationListener() {
 
         public void onLocationChanged(Location location) {
-            Log.v(TAG, "onLocationCanged -> location = " + location);
 
             final double longitudeBest = location.getLongitude();
             final double latitudeBest = location.getLatitude();
 
-            Log.v(TAG, "Longitude = " + longitudeBest);
-
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.v(TAG, "run ->");
-//                    setCorr(longitudeBest, latitudeBest);
-
                     ContactModel gpsNote = new ContactModel();
 
                     gpsNote.setNote(currentNote);
                     gpsNote.setLong(longitudeBest);
                     gpsNote.setLat(latitudeBest);
 
-
-                    Log.v(TAG, "-> sQLiteHelper.insertRecord");
                     sQLiteHelper.insertRecord( gpsNote );
+                    updateNoteList(new Coordinate(longitudeBest, latitudeBest));
+
                     Toast.makeText( m_context, "Note saved", Toast.LENGTH_LONG).show();
                 }
             });
@@ -225,70 +232,11 @@ public class MainActivity extends AppCompatActivity {
     private final LocationListener locationListenerToCalcDistance = new LocationListener() {
 
         public void onLocationChanged(Location location) {
-            Log.v(TAG, "onLocationCanged -> location = " + location);
 
             final Coordinate currentPoss = new Coordinate(
                     location.getLongitude(), location.getLatitude());
-//            final double longitudeBest = location.getLongitude();
-//            final double latitudeBest = location.getLatitude();
 
-            final ArrayList<ContactModel> arcm = sQLiteHelper.getAllRecords();
-
-            Log.v(TAG, "arcm = " + arcm.toString());
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.v(TAG, "run ->");
-//                    setCorr(longitudeBest, latitudeBest);
-
-                    ArrayList<Double> aDist = new ArrayList<>();
-                    ArrayList<String> aText = new ArrayList<>();
-
-                    Log.v(TAG, "arcm.size() = " + arcm.size());
-                    for(int i=0; i<arcm.size(); i++) {
-
-                        Coordinate c1 = new Coordinate(
-                                arcm.get(i).getLongitude(), arcm.get(i).getLatitude());
-
-                        double dist = currentPoss.dist(c1); // distance in meter
-
-                        String text = arcm.get(i).getNote();
-                        boolean added = false;
-
-                        for(int j=0; j<aDist.size(); j++) {
-                            if( dist < aDist.get(j) ) {
-                                aDist.add(j, dist);
-                                aText.add(j, text);
-                                added = true;
-                                break;
-                            }
-                        }
-                        if( !added ) {
-                            aDist.add(dist);
-                            aText.add(text);
-                        }
-                    }
-                    ((LinearLayout) findViewById(R.id.parentLayout)).removeAllViewsInLayout();
-                    for(int i=0; i<aText.size(); i++) {
-//                        TextView textView = new TextView( m_context ); //this should be "this", men då får man spara det annanstans ifrån :)
-//                        textView.setText( aText.get(i) );
-                        View note = getNoteView( aText.get(i), aDist.get(i));
-                        ((LinearLayout) findViewById(R.id.parentLayout)).addView( note );
-                    }
-                    if( aText.size() == 0 ) {
-                        findViewById(R.id.tvNoRecordsFound).setVisibility(View.VISIBLE);
-                    } else {
-                        findViewById(R.id.tvNoRecordsFound).setVisibility(View.GONE);
-                    }
-                    findViewById(R.id.tvLoadingNotes).setVisibility(View.GONE);
-
-
-                    Toast.makeText( m_context, "Read all notes", Toast.LENGTH_LONG).show();
-
-                    Log.v(TAG, "locationListenerToCalcDistance / onLocationChanged, updatet list");
-                }
-            });
+            updateNoteList( currentPoss );
         }
 
         @Override
@@ -307,20 +255,8 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-/*
-    private void setCorr(double longitude, double latitude) {
-//        longitudeValue.setText(longitude + "");
-//        latitudeValue.setText(latitude + "");
-        Toast.makeText(MainActivity.this, "Best Provider update", Toast.LENGTH_SHORT).show();
-
-    }
-*/
-
     public void onReadRecord(View view) {
-
-        Log.v(TAG, "onReadRecord ->");
         readRecord();
-        Log.v(TAG, "onReadRecord <-");
     }
 
     private void readRecord() {
@@ -345,64 +281,224 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickNote(View view) {
-        Log.v(TAG, "onClickNote ->");
-        Log.v(TAG, "view " + ((TextView) view.findViewById(R.id.noteNote)).getText());
+        View v = ((View) view.getParent()).findViewById(R.id.noteButtons);
 
+        if( v.getVisibility() == View.VISIBLE ){
+            v.setVisibility( View.GONE );
+        } else {
+            hideAllNoteButtons();
+            v.setVisibility( View.VISIBLE );
+        }
     }
 
-// */
-}
+    private void updateNoteList(final Coordinate currentPoss ){
+        final ArrayList<ContactModel> aContactModel = sQLiteHelper.getAllRecords();
 
-
-/*
-import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-
-public class MainActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        runOnUiThread(new Runnable() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void run() {
+                ArrayList<Double> aDist = new ArrayList<>();
+                ArrayList<String> aText = new ArrayList<>();
+                ArrayList<Integer> aId = new ArrayList<>();
+
+                for(int i=0; i<aContactModel.size(); i++) {
+                    Coordinate c1 = new Coordinate(
+                            aContactModel.get(i).getLongitude(),
+                            aContactModel.get(i).getLatitude());
+
+                    double dist = currentPoss.dist(c1); // distance in meter
+                    int id = aContactModel.get(i).getID();
+                    String text = aContactModel.get(i).getNote();
+                    boolean added = false;
+
+                    for(int j=0; j<aDist.size(); j++) {
+                        if( dist < aDist.get(j) ) {
+                            aDist.add(j, dist);
+                            aText.add(j, text);
+                            aId.add(j, id);
+                            added = true;
+                            break;
+                        }
+                    }
+                    if( !added ) {
+                        aDist.add(dist);
+                        aText.add(text);
+                        aId.add(id);
+                    }
+                }
+                ((LinearLayout) findViewById(R.id.parentLayout)).removeAllViewsInLayout();
+                for(int i=0; i<aText.size(); i++) {
+                    View note = getNoteView( aText.get(i), aDist.get(i), aId.get(i));
+                    ((LinearLayout) findViewById(R.id.parentLayout)).addView( note );
+                }
+
+                if( aText.size() == 0 ) {
+                    findViewById(R.id.tvNoRecordsFound).setVisibility(View.VISIBLE);
+                } else {
+                    findViewById(R.id.tvNoRecordsFound).setVisibility(View.GONE);
+                }
+                findViewById(R.id.tvLoadingNotes).setVisibility(View.GONE);
+                Toast.makeText( m_context, "Read all notes", Toast.LENGTH_LONG).show();
             }
         });
+
+        findViewById(R.id.noteLoading).setVisibility( View.GONE );
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    private View getNote(Button view){
+        return ((View) view.getParent().getParent());
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    private ContactModel getContact(View note){
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        int id = Integer.parseInt(""+((TextView) note.findViewById(R.id.noteId)).getText());
+        ArrayList<ContactModel> aContactModel = sQLiteHelper.getAllRecords();
+
+        for(ContactModel cm : aContactModel){
+            if( cm.getID() == id )
+                return cm;
         }
+        return null;
+    }
 
-        return super.onOptionsItemSelected(item);
+    public void deleteNote(final View view) {
+        new AlertDialog.Builder(m_context)
+                .setTitle("Delete note")
+                .setMessage("Are you sure you want to delete this note?")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        View note = getNote((Button) view);
+                        ContactModel cm = getContact( note );
+                        sQLiteHelper.deleteRecord( cm );
+
+                        ((ViewGroup) note.getParent()).removeView(note);
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    public void editNote(final View view) {
+        final View note = getNote( (Button) view );
+        final EditText editText = new EditText(m_context);
+        editText.setText(((TextView) note.findViewById(R.id.noteNote)).getText());
+        new AlertDialog.Builder(m_context)
+                .setTitle("Edit note")
+                .setMessage("Are you sure you want to edit this note?")
+                .setView(editText)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Log.v(TAG, "editText.getText() = " + editText.getText());
+                        String text = "" + editText.getText();
+                        ContactModel cm = getContact( note );
+                        cm.setNote( text );
+                        sQLiteHelper.updateRecord( cm );
+                        ((TextView) note.findViewById(R.id.noteNote)).setText( text );
+                        hideAllNoteButtons();
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_info)
+                .show();
+    }
+
+    public void updateNotePosition(final View view) {
+        new AlertDialog.Builder(m_context)
+                .setTitle("Update note position")
+                .setMessage("Are you sure you want to update this notes position to current position?")
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        hideAllNoteButtons();
+                        final View note = getNote( (Button) view );
+                        note.findViewById(R.id.noteDistance).setVisibility(View.GONE);
+                        note.findViewById(R.id.noteDistanceLoading).setVisibility(View.VISIBLE);
+                        getLocation(new LocationListener() {
+                            public void onLocationChanged(Location location) {
+
+                                final double longitudeBest = location.getLongitude();
+                                final double latitudeBest = location.getLatitude();
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ContactModel cm = getContact( note );
+                                        cm.setLong( longitudeBest );
+                                        cm.setLat( latitudeBest );
+                                        sQLiteHelper.updateRecord( cm );
+
+                                        updateNoteList(new Coordinate(longitudeBest, latitudeBest));
+
+                                        ((TextView) note.findViewById(R.id.noteDistance)).setText(
+                                                "Updating..."
+                                        );
+
+                                        Toast.makeText( m_context, "Note updated", Toast.LENGTH_LONG).show();
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onStatusChanged(String s, int i, Bundle bundle) {
+
+                            }
+
+                            @Override
+                            public void onProviderEnabled(String s) {
+
+                            }
+
+                            @Override
+                            public void onProviderDisabled(String s) {
+
+                            }
+                        });
+
+                    }
+                })
+                .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                })
+                .setIcon(android.R.drawable.ic_dialog_map)
+                .show();
+    }
+
+
+
+    private void hideAllNoteButtons(){
+        ViewGroup vg = (ViewGroup) findViewById(R.id.parentLayout);
+        ArrayList<View> views = getViewsByTag( vg, "noteButtons" );
+
+        for(int i=0; i<views.size(); i++){
+            views.get(i).setVisibility( View.GONE );
+        }
+    }
+
+    private static ArrayList<View> getViewsByTag(ViewGroup root, String tag){
+        ArrayList<View> views = new ArrayList<View>();
+        final int childCount = root.getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            final View child = root.getChildAt(i);
+            if (child instanceof ViewGroup) {
+                views.addAll(getViewsByTag((ViewGroup) child, tag));
+            }
+
+            final Object tagObj = child.getTag();
+            if (tagObj != null && tagObj.equals(tag)) {
+                views.add(child);
+            }
+
+        }
+        return views;
     }
 }
-*/

@@ -3,4 +3,10 @@
     <string name="action_settings">Settings</string>
     <string name="message_loading_notes">Loading notes, please wait</string>
     <string name="message_no_notes">No notes found, create a note by clicking the \'+\'-sign</string>
+    <string name="delete">Delete</string>
+    <string name="edit_text">Edit text</string>
+    <string name="update_position">Update position</string>
+    <string name="refresh">Refresh</string>
+    <string name="write_note_here">Write your note here</string>
+    <string name="save">Save</string>
 </resources>

@@ -13,6 +13,11 @@
         <item name="android:textSize">@dimen/textSizeToolbarHeader</item>
     </style>
 
+    <style name="MyBottomMargin" parent="@android:style/TextAppearance.Medium">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/list_bottom_margin</item>
+    </style>
+
     <style name="MyMessagesAppearance" parent="@android:style/TextAppearance.Small">
         <item name="android:textColor">@android:color/holo_blue_dark</item>
         <item name="android:textSize">@dimen/textSizeToolbarHeader</item>

@@ -1,7 +1,9 @@
 package com.slimsimapps.gpsnote;
 
 /**
- * Created by simon on 2016-07-26.
+ * 2016-07-26, created by Simon.
+ *
+ * a coordinate, with methods to calculate distance!
  */
 public class Coordinate {
 
@@ -21,9 +23,7 @@ public class Coordinate {
                 Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
                         Math.sin(dLng/2) * Math.sin(dLng/2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        float dist = (float) (earthRadius * c);
-
-        return dist;
+        return (float) (earthRadius * c);
     }
 
     public double dist(Coordinate c2) {

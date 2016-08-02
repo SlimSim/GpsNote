@@ -9,49 +9,33 @@
     <ScrollView
         android:id="@+id/scrollViewDisplay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_weight="1">
         <LinearLayout
+            android:id="@+id/layoutDisplayPeople"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+            <TextView
+                android:id="@+id/tvNoRecordsFound"
+                style="@style/MyMessagesAppearance"
+                android:visibility="gone"
+                android:text="@string/message_no_notes"/>
+            <TextView
+                android:id="@+id/tvLoadingNotes"
+                style="@style/MyMessagesAppearance"
+                android:text="@string/message_loading_notes" />
+
+            <include layout="@layout/note_loading" />
+
             <LinearLayout
-                android:id="@+id/layoutDisplayPeople"
+                android:id="@+id/parentLayout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <!--
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="People"
-                    android:textColor="@color/color_black"
-                    android:textSize="25dp"
-                    android:textStyle="bold" />
-                -->
-                <TextView
-                    android:id="@+id/tvNoRecordsFound"
-                    style="@style/MyMessagesAppearance"
-                    android:visibility="gone"
-                    android:text="@string/message_no_notes"/>
+                android:layout_height="match_parent"
+                android:orientation="vertical"/>
 
-                <TextView
-                    android:id="@+id/tvLoadingNotes"
-                    style="@style/MyMessagesAppearance"
-                    android:text="@string/message_loading_notes" />
-
-                <LinearLayout
-                    android:id="@+id/parentLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"/>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/list_bottom_margin">
-                </FrameLayout>
-            </LinearLayout>
+            <FrameLayout style="@style/MyBottomMargin">
+            </FrameLayout>
         </LinearLayout>
     </ScrollView>
     <EditText
@@ -60,7 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/color_grey"
-        android:hint="Write your note here"
+        android:hint="@string/write_note_here"
         android:textColor="@color/color_white" />
     <Button
         android:id="@+id/btnSaveNewRecord"
@@ -69,18 +53,8 @@
         android:layout_height="wrap_content"
         android:background="@color/colorPrimary"
         android:onClick="onSaveGpsNote"
-        android:text="Save"
+        android:text="@string/save"
         android:textColor="@color/color_white"
         android:textStyle="bold" />
-<!--
-    <Button
-        android:id="@+id/btnWriteNewRecord"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/color_blue"
-        android:onClick="onWriteGpsNote"
-        android:text="Create note"
-        android:textColor="@color/color_white"
-        android:textStyle="bold" />
-    -->
+
 </LinearLayout>
