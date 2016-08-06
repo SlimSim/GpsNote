@@ -7,17 +7,20 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.slimsimapps.gpsnote.database.NoteModel;
+import com.slimsimapps.gpsnote.database.LastPositionModel;
+
 import java.util.ArrayList;
 
 /**
- * Created by simon on 2016-07-03.
+ * 2016-07-03. Created by Simon
  */
 public class SQLiteHelper extends SQLiteOpenHelper {
 
     private static final String TAG = "SQLiteHelper";
 
     private SQLiteDatabase database;
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     public static final String DATABASE_NAME = "SQLiteDatabase.db";
     public SQLiteHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -28,15 +31,40 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String COLUMN_NOTE = "NOTE";
     public static final String COLUMN_LONGITUDE = "LONGITUDE";
     public static final String COLUMN_LATITUDE = "LATITUDE";
+
+    public static final String LAST_POSS = "LAST_POSSITION";
+    public static final String SAVED_TIME = "SAVED_TIME";
     @Override
     public void onCreate(SQLiteDatabase db) {
+        Log.v(TAG, TAG + ", onCreate ->");
         db.execSQL("create table " + TABLE_NAME + " ( " + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + COLUMN_NOTE + " VARCHAR, " + COLUMN_LONGITUDE + " DOUBLE, " + COLUMN_LATITUDE + " DOUBLE);");
+        createLastPossTable( db );
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
-        onCreate(db);
+        Log.v(TAG, TAG + ", onUpgrade ->");
+
+        if(newVersion == 2)
+            createLastPossTable(db);
+
+        Log.v(TAG, TAG + ", onUpgrade <-");
+    }
+
+    private void createLastPossTable( SQLiteDatabase db ) {
+        db.execSQL("create table " + LAST_POSS + " ( " + SAVED_TIME + " LONG, " + COLUMN_LONGITUDE + " DOUBLE, " + COLUMN_LATITUDE + " DOUBLE);");
+
+        LastPositionModel lpm = new LastPositionModel();
+        lpm.setLong( 0 );
+        lpm.setLat( 0 );
+        lpm.setSavedTimeavedTime( System.currentTimeMillis() );
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(SAVED_TIME, lpm.getSavedTime());
+        contentValues.put(COLUMN_LATITUDE, lpm.getLatitude());
+        contentValues.put(COLUMN_LONGITUDE, lpm.getLongitude());
+
+        db.insert(LAST_POSS, null, contentValues);
     }
 
     /**
@@ -46,7 +74,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      * @param contact the model to be inserted :)
      */
 
-    public void insertRecord(ContactModel contact) { //method 1
+    public void insertRecord(NoteModel contact) { //method 1
         Log.v(TAG, "insertRecord ->");
         database = this.getReadableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -58,14 +86,14 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         Log.v(TAG, "insertRecord <-");
     }
     /*
-    public void insertRecordAlternate(ContactModel contact) { //method 2
+    public void insertRecordAlternate(NoteModel contact) { //method 2
         database = this.getReadableDatabase();
         database.execSQL("INSERT INTO " + TABLE_NAME + "(" + COLUMN_LONGITUDE + "," + COLUMN_LATITUDE + ") VALUES('" + contact.getFirstName() + "','" + contact.getLastName() + "')");
         database.close();
     }
     */
 
-    public void updateRecord(ContactModel contact) { // method 1
+    public void updateRecord(NoteModel contact) { // method 1
         database = this.getReadableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_ID, contact.getID());
@@ -75,45 +103,58 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         database.update(TABLE_NAME, contentValues, COLUMN_ID + " = ?", new String[]{""+contact.getID()});
         database.close();
     }
+    public void updateLastPoss(LastPositionModel lastPositionModel) { // method 1
+        database = this.getReadableDatabase();
+        Log.v(TAG, "database open = " + database);
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(SAVED_TIME, lastPositionModel.getSavedTime());
+        contentValues.put(COLUMN_LATITUDE, lastPositionModel.getLatitude());
+        contentValues.put(COLUMN_LONGITUDE, lastPositionModel.getLongitude());
+        database.update(LAST_POSS, contentValues, null, null);
+        database.close();
+        Log.v(TAG, "database close = " + database);
+    }
     /*
-    public void updateRecordAlternate(ContactModel contact) { // method 2
+    public void updateRecordAlternate(NoteModel contact) { // method 2
         database = this.getReadableDatabase();
         database.execSQL("update " + TABLE_NAME + " set " + COLUMN_LONGITUDE + " = '" + contact.getFirstName() + "', " + COLUMN_LATITUDE + " = '" + contact.getLastName() + "' where " + COLUMN_ID + " = '" + contact.getID() + "'");
         database.close();
     }
     */
 
-    public void deleteRecord(ContactModel contact) { // method 1
+    public void deleteRecord(NoteModel contact) { // method 1
         database = this.getReadableDatabase();
 //        database.delete(TABLE_NAME, COLUMN_ID + " = ?", new String[]{ contact.getID()});
         database.delete(TABLE_NAME, COLUMN_ID + " = ?", new String[]{""+contact.getID()});
         database.close();
     }
     /*
-    public void deleteRecordAlternate(ContactModel contact) { // method 2
+    public void deleteRecordAlternate(NoteModel contact) { // method 2
         database = this.getReadableDatabase();
         database.execSQL("delete from " + TABLE_NAME + " where " + COLUMN_ID + " = '" + contact.getID() + "'");
         database.close();
     }
     */
 
-    public ArrayList<ContactModel> getAllRecords() { // method 1
+
+
+    public ArrayList<NoteModel> getAllRecords() { // method 1
         database = this.getReadableDatabase();
         Cursor cursor = database.query(TABLE_NAME, null, null, null, null, null, null);
 
-        ArrayList<ContactModel> contacts = new ArrayList<>();
-        ContactModel contactModel;
+        ArrayList<NoteModel> contacts = new ArrayList<>();
+        NoteModel noteModel;
         if (cursor.getCount() > 0) {
             for (int i = 0; i < cursor.getCount(); i++) {
                 cursor.moveToNext();
-                contactModel = new ContactModel();
-                contactModel.setID(cursor.getInt(cursor.getColumnIndex( COLUMN_ID )));
-                contactModel.setNote(cursor.getString(cursor.getColumnIndex( COLUMN_NOTE )));
-                contactModel.setLong(cursor.getDouble(cursor.getColumnIndex( COLUMN_LONGITUDE )));
-                contactModel.setLat(cursor.getDouble(cursor.getColumnIndex( COLUMN_LATITUDE )));
+                noteModel = new NoteModel();
+                noteModel.setID(cursor.getInt(cursor.getColumnIndex( COLUMN_ID )));
+                noteModel.setNote(cursor.getString(cursor.getColumnIndex( COLUMN_NOTE )));
+                noteModel.setLong(cursor.getDouble(cursor.getColumnIndex( COLUMN_LONGITUDE )));
+                noteModel.setLat(cursor.getDouble(cursor.getColumnIndex( COLUMN_LATITUDE )));
 
 
-                contacts.add(contactModel);
+                contacts.add(noteModel);
             }
         }
         cursor.close();
@@ -121,18 +162,39 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         return contacts;
     }
+
+    public LastPositionModel getLastPoss() { // method 1
+        database = this.getReadableDatabase();
+        Log.v(TAG, "database open = " + database);
+        Cursor cursor = database.query(LAST_POSS, null, null, null, null, null, null);
+
+        LastPositionModel lastPositionModel = new LastPositionModel();;
+        if (cursor.getCount() > 0) {
+            for (int i = 0; i < cursor.getCount(); i++) {
+                cursor.moveToNext();
+                lastPositionModel.setSavedTimeavedTime(cursor.getInt(cursor.getColumnIndex( SAVED_TIME )));
+                lastPositionModel.setLong(cursor.getDouble(cursor.getColumnIndex( COLUMN_LONGITUDE )));
+                lastPositionModel.setLat(cursor.getDouble(cursor.getColumnIndex( COLUMN_LATITUDE )));
+            }
+        }
+        cursor.close();
+        database.close();
+        Log.v(TAG, "database close = " + database);
+
+        return lastPositionModel;
+    }
     /*
-    public ArrayList<ContactModel> getAllRecordsAlternate() { //method 2
+    public ArrayList<NoteModel> getAllRecordsAlternate() { //method 2
         database = this.getReadableDatabase();
         Cursor cursor = database.rawQuery("SELECT * FROM " + TABLE_NAME, null);
 
-        ArrayList<ContactModel> contacts = new ArrayList<ContactModel>();
-        ContactModel contactModel;
+        ArrayList<NoteModel> contacts = new ArrayList<NoteModel>();
+        NoteModel contactModel;
         if (cursor.getCount() > 0) {
             for (int i = 0; i < cursor.getCount(); i++) {
                 cursor.moveToNext();
 
-                contactModel = new ContactModel();
+                contactModel = new NoteModel();
                 contactModel.setID(cursor.getString(0));
                 contactModel.setFirstName(cursor.getString(1));
                 contactModel.setLastName(cursor.getString(2));

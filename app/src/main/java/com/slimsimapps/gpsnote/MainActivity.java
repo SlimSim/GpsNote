@@ -10,10 +10,12 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
+import android.support.annotation.IdRes;
+import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -23,10 +25,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import com.slimsimapps.gpsnote.database.LastPositionModel;
+import com.slimsimapps.gpsnote.database.NoteModel;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 
 /**
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
     SQLiteHelper sQLiteHelper = new SQLiteHelper(MainActivity.this);
 
-    // private ArrayList<ContactModel> aContactModel;
+    // private ArrayList<NoteModel> aContactModel;
 
     /*
         double longitudeBest, latitudeBest;
@@ -67,11 +69,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
-//        ArrayList<ContactModel> aContactModel = sQLiteHelper.getAllRecords();
+        m_context = this;
+
+        LastPositionModel lpm = sQLiteHelper.getLastPoss();
+        Coordinate lastPoss = new Coordinate(lpm.getLongitude(), lpm.getLatitude());
+        updateNoteList( lastPoss, false );
+
+        /*
+         * Sets up a SwipeRefreshLayout.OnRefreshListener that is invoked when the user
+         * performs a swipe-to-refresh gesture.
+         */
+        final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefresh);
+        if(swipeRefreshLayout != null)
+            swipeRefreshLayout.setOnRefreshListener(
+                    new SwipeRefreshLayout.OnRefreshListener() {
+                        @Override
+                        public void onRefresh() {
+                            swipeRefreshLayout.setRefreshing(false);
+                            readRecord();
+                        }
+                    }
+            );
+
         readRecord();
 
-//        longitudeValue = (TextView) findViewById(R.id.getLocationLongitudeResult); // my
-//        latitudeValue = (TextView) findViewById(R.id.getLocationLatitudeResult); // my
     }
 
     private boolean checkLocation() {
@@ -122,7 +143,6 @@ public class MainActivity extends AppCompatActivity {
         editText.setVisibility(View.GONE);
         findViewById(R.id.btnSaveNewRecord).setVisibility(View.GONE);
         findViewById(R.id.btnWriteNewRecord).setVisibility(View.VISIBLE);
-        findViewById(R.id.btnReadRecord).setVisibility(View.VISIBLE);
 
         editText.setText(null);
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -142,18 +162,18 @@ public class MainActivity extends AppCompatActivity {
     public void getLocation( LocationListener locationListener) {
 
         Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setAltitudeRequired(true);
         criteria.setBearingRequired(false);
         criteria.setCostAllowed(true);
-        //        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        //criteria.setPowerRequirement(Criteria.POWER_LOW);
 
         //locationManager.requestSingleUpdate();
         String provider = locationManager.getBestProvider(criteria, false);
 
         locationManager.requestSingleUpdate(provider, locationListener, Looper.myLooper());
 
-//        Location currentLocation = locationManager.getLastKnownLocation( provider );
+        //Location currentLocation = locationManager.getLastKnownLocation( provider );
     }
 
     public void getLocationAndSaveNote() {
@@ -200,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    ContactModel gpsNote = new ContactModel();
+                    NoteModel gpsNote = new NoteModel();
 
                     gpsNote.setNote(currentNote);
                     gpsNote.setLong(longitudeBest);
@@ -255,14 +275,9 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    public void onReadRecord(View view) {
-        readRecord();
-    }
-
     private void readRecord() {
 
-        m_context = this;
-
+        findViewById(R.id.updatePositionSpinner).setVisibility( View.VISIBLE );
         getLocation( locationListenerToCalcDistance );
 
     }
@@ -272,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
         editText.setVisibility(View.VISIBLE);
         findViewById(R.id.btnSaveNewRecord).setVisibility(View.VISIBLE);
         findViewById(R.id.btnWriteNewRecord).setVisibility(View.GONE);
-        findViewById(R.id.btnReadRecord).setVisibility(View.GONE);
 
         editText.requestFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -292,7 +306,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateNoteList(final Coordinate currentPoss ){
-        final ArrayList<ContactModel> aContactModel = sQLiteHelper.getAllRecords();
+        updateNoteList(currentPoss, true);
+    }
+
+    private void updateNoteList(final Coordinate currentPoss, boolean bUpdateDbLastPos ){
+
+        if( bUpdateDbLastPos ) {
+            LastPositionModel lpm = new LastPositionModel();
+            lpm.setLong(currentPoss.getLong());
+            lpm.setLat(currentPoss.getLat());
+            lpm.setSavedTimeavedTime(System.currentTimeMillis());
+            sQLiteHelper.updateLastPoss(lpm);
+            findViewById(R.id.updatePositionSpinner).setVisibility( View.GONE );
+        }
+
+        final ArrayList<NoteModel> aNoteModel = sQLiteHelper.getAllRecords();
 
         runOnUiThread(new Runnable() {
             @Override
@@ -301,14 +329,14 @@ public class MainActivity extends AppCompatActivity {
                 ArrayList<String> aText = new ArrayList<>();
                 ArrayList<Integer> aId = new ArrayList<>();
 
-                for(int i=0; i<aContactModel.size(); i++) {
+                for(int i = 0; i< aNoteModel.size(); i++) {
                     Coordinate c1 = new Coordinate(
-                            aContactModel.get(i).getLongitude(),
-                            aContactModel.get(i).getLatitude());
+                            aNoteModel.get(i).getLongitude(),
+                            aNoteModel.get(i).getLatitude());
 
                     double dist = currentPoss.dist(c1); // distance in meter
-                    int id = aContactModel.get(i).getID();
-                    String text = aContactModel.get(i).getNote();
+                    int id = aNoteModel.get(i).getID();
+                    String text = aNoteModel.get(i).getNote();
                     boolean added = false;
 
                     for(int j=0; j<aDist.size(); j++) {
@@ -338,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
                     findViewById(R.id.tvNoRecordsFound).setVisibility(View.GONE);
                 }
                 findViewById(R.id.tvLoadingNotes).setVisibility(View.GONE);
-                Toast.makeText( m_context, "Read all notes", Toast.LENGTH_LONG).show();
+//                Toast.makeText( m_context, "Read all notes", Toast.LENGTH_LONG).show();
             }
         });
 
@@ -349,12 +377,12 @@ public class MainActivity extends AppCompatActivity {
         return ((View) view.getParent().getParent());
     }
 
-    private ContactModel getContact(View note){
+    private NoteModel getContact(View note){
 
         int id = Integer.parseInt(""+((TextView) note.findViewById(R.id.noteId)).getText());
-        ArrayList<ContactModel> aContactModel = sQLiteHelper.getAllRecords();
+        ArrayList<NoteModel> aNoteModel = sQLiteHelper.getAllRecords();
 
-        for(ContactModel cm : aContactModel){
+        for(NoteModel cm : aNoteModel){
             if( cm.getID() == id )
                 return cm;
         }
@@ -368,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         View note = getNote((Button) view);
-                        ContactModel cm = getContact( note );
+                        NoteModel cm = getContact( note );
                         sQLiteHelper.deleteRecord( cm );
 
                         ((ViewGroup) note.getParent()).removeView(note);
@@ -389,13 +417,12 @@ public class MainActivity extends AppCompatActivity {
         editText.setText(((TextView) note.findViewById(R.id.noteNote)).getText());
         new AlertDialog.Builder(m_context)
                 .setTitle("Edit note")
-                .setMessage("Are you sure you want to edit this note?")
                 .setView(editText)
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         Log.v(TAG, "editText.getText() = " + editText.getText());
                         String text = "" + editText.getText();
-                        ContactModel cm = getContact( note );
+                        NoteModel cm = getContact( note );
                         cm.setNote( text );
                         sQLiteHelper.updateRecord( cm );
                         ((TextView) note.findViewById(R.id.noteNote)).setText( text );
@@ -430,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        ContactModel cm = getContact( note );
+                                        NoteModel cm = getContact( note );
                                         cm.setLong( longitudeBest );
                                         cm.setLat( latitudeBest );
                                         sQLiteHelper.updateRecord( cm );

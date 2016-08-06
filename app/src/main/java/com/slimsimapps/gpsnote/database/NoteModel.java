@@ -1,9 +1,10 @@
-package com.slimsimapps.gpsnote;
+package com.slimsimapps.gpsnote.database;
 
 /**
- * Created by simon on 2016-07-03.
+ * 2016-07-03, Created by Simon
+ * The model for a note, compleate with longitude and latitude
  */
-public class ContactModel {
+public class NoteModel {
 
     private int ID;
 

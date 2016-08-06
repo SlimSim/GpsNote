@@ -30,4 +30,10 @@ public class Coordinate {
         return distFrom(this.latitude, this.longitude, c2.latitude, c2.longitude);
     }
 
+    public double getLong() {
+        return longitude;
+    }
+    public double getLat() {
+        return latitude;
+    }
 }

@@ -6,38 +6,45 @@
     android:orientation="vertical"
     android:paddingTop="@dimen/activity_vertical_margin_plus_toolbar"
     tools:context=".MainActivity">
-    <ScrollView
-        android:id="@+id/scrollViewDisplay"
+    <android.support.v4.widget.SwipeRefreshLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         android:layout_weight="1">
-        <LinearLayout
-            android:id="@+id/layoutDisplayPeople"
+        <ScrollView
+            android:id="@+id/scrollViewDisplay"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/tvNoRecordsFound"
-                style="@style/MyMessagesAppearance"
-                android:visibility="gone"
-                android:text="@string/message_no_notes"/>
-            <TextView
-                android:id="@+id/tvLoadingNotes"
-                style="@style/MyMessagesAppearance"
-                android:text="@string/message_loading_notes" />
-
-            <include layout="@layout/note_loading" />
-
+            android:layout_height="0dp">
             <LinearLayout
-                android:id="@+id/parentLayout"
+                android:id="@+id/layoutDisplayPeople"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"/>
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tvNoRecordsFound"
+                    style="@style/MyMessagesAppearance"
+                    android:visibility="gone"
+                    android:text="@string/message_no_notes"/>
+                <TextView
+                    android:id="@+id/tvLoadingNotes"
+                    style="@style/MyMessagesAppearance"
+                    android:text="@string/message_loading_notes" />
 
-            <FrameLayout style="@style/MyBottomMargin">
-            </FrameLayout>
-        </LinearLayout>
-    </ScrollView>
+                <include layout="@layout/note_loading" />
+
+                <LinearLayout
+                    android:id="@+id/parentLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"/>
+
+                <FrameLayout style="@style/MyBottomMargin">
+                </FrameLayout>
+            </LinearLayout>
+        </ScrollView>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
     <EditText
         android:id="@+id/textAddNewRecord"
         android:visibility="gone"
