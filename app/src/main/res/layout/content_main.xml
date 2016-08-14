@@ -19,6 +19,7 @@
             <LinearLayout
                 android:id="@+id/layoutDisplayPeople"
                 android:layout_width="match_parent"
+                android:onClick="hideAllNoteButtons"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
                 <TextView

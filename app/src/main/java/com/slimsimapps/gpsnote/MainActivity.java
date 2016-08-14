@@ -502,6 +502,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    public void hideAllNoteButtons(View view) {
+        hideAllNoteButtons();
+    }
+
     private void hideAllNoteButtons(){
         ViewGroup vg = (ViewGroup) findViewById(R.id.parentLayout);
         ArrayList<View> views = getViewsByTag( vg, "noteButtons" );
