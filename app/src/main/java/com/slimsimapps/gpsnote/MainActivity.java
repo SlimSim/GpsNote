@@ -174,27 +174,7 @@ public class MainActivity extends AppCompatActivity {
             locationManager.requestSingleUpdate(provider, locationListener, Looper.myLooper());
         } else {
             locationListener.onLocationChanged( currentLocation );
-            locationManager.requestSingleUpdate(provider, new LocationListener() {
-                @Override
-                public void onLocationChanged(Location location) {
-
-                }
-
-                @Override
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                }
-
-                @Override
-                public void onProviderEnabled(String provider) {
-
-                }
-
-                @Override
-                public void onProviderDisabled(String provider) {
-
-                }
-            }, Looper.myLooper());
+            locationManager.requestSingleUpdate(provider, locationListenerToCalcDistance, Looper.myLooper());
         }
     }
 
