@@ -134,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
      **********************************************************************************************/
 
     public void onSaveGpsNote(View view) {
-        Log.v(TAG, "onSaveGpsNote ->");
 
         currentNote = ((EditText) findViewById(R.id.textAddNewRecord)).getText().toString();
 
@@ -160,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocation( LocationListener locationListener) {
-
         Criteria criteria = new Criteria();
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setAltitudeRequired(true);
@@ -168,23 +166,23 @@ public class MainActivity extends AppCompatActivity {
         criteria.setCostAllowed(true);
         //criteria.setPowerRequirement(Criteria.POWER_LOW);
 
-        //locationManager.requestSingleUpdate();
         String provider = locationManager.getBestProvider(criteria, false);
 
-        locationManager.requestSingleUpdate(provider, locationListener, Looper.myLooper());
+        Location currentLocation = locationManager.getLastKnownLocation( provider );
 
-        //Location currentLocation = locationManager.getLastKnownLocation( provider );
+        if(currentLocation != null ) {
+            locationListener.onLocationChanged( currentLocation );
+        } else {
+            locationManager.requestSingleUpdate(provider, locationListener, Looper.myLooper());
+        }
     }
 
     public void getLocationAndSaveNote() {
-        Log.v(TAG, "getLocationAndSaveNote ->");
         if(!checkLocation())
             return;
 
         ((TextView) findViewById(R.id.noteLoadingNote)).setText( currentNote );
-        Log.v(TAG, "getLocationAndSaveNote ->");
         findViewById(R.id.noteLoading).setVisibility( View.VISIBLE );
-        Log.v(TAG, "getLocationAndSaveNote ->");
 
         getLocation( locationListenerToSaveNote );
     }
@@ -420,7 +418,6 @@ public class MainActivity extends AppCompatActivity {
                 .setView(editText)
                 .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        Log.v(TAG, "editText.getText() = " + editText.getText());
                         String text = "" + editText.getText();
                         NoteModel cm = getContact( note );
                         cm.setNote( text );
