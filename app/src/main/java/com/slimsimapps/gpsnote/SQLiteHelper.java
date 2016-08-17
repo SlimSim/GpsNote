@@ -36,19 +36,15 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public static final String SAVED_TIME = "SAVED_TIME";
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.v(TAG, TAG + ", onCreate ->");
         db.execSQL("create table " + TABLE_NAME + " ( " + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," + COLUMN_NOTE + " VARCHAR, " + COLUMN_LONGITUDE + " DOUBLE, " + COLUMN_LATITUDE + " DOUBLE);");
         createLastPossTable( db );
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        Log.v(TAG, TAG + ", onUpgrade ->");
-
         if(newVersion == 2)
             createLastPossTable(db);
 
-        Log.v(TAG, TAG + ", onUpgrade <-");
     }
 
     private void createLastPossTable( SQLiteDatabase db ) {
@@ -75,7 +71,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      */
 
     public void insertRecord(NoteModel contact) { //method 1
-        Log.v(TAG, "insertRecord ->");
         database = this.getReadableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(COLUMN_NOTE, contact.getNote());
@@ -83,7 +78,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         contentValues.put(COLUMN_LONGITUDE, contact.getLongitude());
         database.insert(TABLE_NAME, null, contentValues);
         database.close();
-        Log.v(TAG, "insertRecord <-");
     }
     /*
     public void insertRecordAlternate(NoteModel contact) { //method 2
@@ -105,14 +99,12 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     }
     public void updateLastPoss(LastPositionModel lastPositionModel) { // method 1
         database = this.getReadableDatabase();
-        Log.v(TAG, "database open = " + database);
         ContentValues contentValues = new ContentValues();
         contentValues.put(SAVED_TIME, lastPositionModel.getSavedTime());
         contentValues.put(COLUMN_LATITUDE, lastPositionModel.getLatitude());
         contentValues.put(COLUMN_LONGITUDE, lastPositionModel.getLongitude());
         database.update(LAST_POSS, contentValues, null, null);
         database.close();
-        Log.v(TAG, "database close = " + database);
     }
     /*
     public void updateRecordAlternate(NoteModel contact) { // method 2
@@ -165,7 +157,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     public LastPositionModel getLastPoss() { // method 1
         database = this.getReadableDatabase();
-        Log.v(TAG, "database open = " + database);
         Cursor cursor = database.query(LAST_POSS, null, null, null, null, null, null);
 
         LastPositionModel lastPositionModel = new LastPositionModel();;
@@ -179,7 +170,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
         cursor.close();
         database.close();
-        Log.v(TAG, "database close = " + database);
 
         return lastPositionModel;
     }

@@ -170,10 +170,14 @@ public class MainActivity extends AppCompatActivity {
 
         Location currentLocation = locationManager.getLastKnownLocation( provider );
 
-        if( currentLocation.getAccuracy() > 50 ){
-            locationManager.requestSingleUpdate(provider, locationListener, Looper.myLooper());
+        if( currentLocation != null ) {
+            if (currentLocation.getAccuracy() > 50) {
+                locationManager.requestSingleUpdate(provider, locationListener, Looper.myLooper());
+            } else {
+                locationListener.onLocationChanged(currentLocation);
+                locationManager.requestSingleUpdate(provider, locationListenerToCalcDistance, Looper.myLooper());
+            }
         } else {
-            locationListener.onLocationChanged( currentLocation );
             locationManager.requestSingleUpdate(provider, locationListenerToCalcDistance, Looper.myLooper());
         }
     }
